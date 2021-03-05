@@ -6,6 +6,7 @@
 #include "esp_bt.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
+#include "esp_wifi.h"
 
 static const char *tag = "BLE_ADV";
 
@@ -164,7 +165,11 @@ static void hci_cmd_send_ble_set_adv_param(void)
 
 static void hci_cmd_send_ble_set_adv_data(void)
 {
-    char *adv_name = "ESP-BLE-HELLO";
+
+    uint8_t ap_mac[6] = {0};
+    esp_efuse_read_mac(ap_mac);
+    char adv_name[256];
+    sprintf(adv_name, "ESP-BLE %x_%x_%x_%x_%x_%x",ap_mac[0],ap_mac[1],ap_mac[2],ap_mac[3],ap_mac[4],ap_mac[5]);
     uint8_t name_len = (uint8_t)strlen(adv_name);
     uint8_t adv_data[31] = {0x02, 0x01, 0x06, 0x0, 0x09};
     uint8_t adv_data_len;

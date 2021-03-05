@@ -21,8 +21,9 @@
    If you'd rather not, just change the below entries to strings with
    the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
 */
-#define EXAMPLE_ESP_WIFI_SSID      "esp-wifi"
 #define EXAMPLE_ESP_WIFI_PASS      "aaaaaaaa"
+
+uint8_t ssid[256];
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
@@ -55,16 +56,21 @@ void wifi_init_softap()
     tcpip_adapter_init();
     ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
 
+    uint8_t ap_mac[6] = {0};
+    esp_efuse_read_mac(ap_mac);
+    sprintf((char*)ssid, "ESP-WiFI %x_%x_%x_%x_%x_%x",ap_mac[0],ap_mac[1],ap_mac[2],ap_mac[3],ap_mac[4],ap_mac[5]);
+
+
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     wifi_config_t wifi_config = {
         .ap = {
-            .ssid = EXAMPLE_ESP_WIFI_SSID,
-            .ssid_len = strlen(EXAMPLE_ESP_WIFI_SSID),
             .password = EXAMPLE_ESP_WIFI_PASS,
             .authmode = WIFI_AUTH_WPA_WPA2_PSK
         },
     };
+    strcpy((char *)wifi_config.ap.ssid, (char *)ssid);
+    wifi_config.ap.ssid_len = strlen((char *)ssid);
     if (strlen(EXAMPLE_ESP_WIFI_PASS) == 0) {
         wifi_config.ap.authmode = WIFI_AUTH_OPEN;
     }
@@ -74,7 +80,7 @@ void wifi_init_softap()
     ESP_ERROR_CHECK(esp_wifi_start());
 
     ESP_LOGI(TAG, "wifi_init_softap finished. SSID:%s password:%s",
-             EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+             ssid, EXAMPLE_ESP_WIFI_PASS);
 
 }
 
